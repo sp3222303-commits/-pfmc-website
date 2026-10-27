@@ -24,13 +24,12 @@ import smartOps from "@/assets/smart-ops.jpg";
 
 const CONTACT_CONFIG = {
   email: "sp2592551@gmail.com",
-  whatsapp: "919417828498", // तुझा WhatsApp नंबर
+  whatsapp: "919417828498", 
   phone: "+91 94178 28498",
 };
 
-/* ==========================================================
-   VALIDATION HELPERS
-========================================================== */
+// 🔥 तुझ्या बॅकएंडची लिंक (लोकलसाठी) 🔥
+const API_URL = "http://localhost:5000/api";
 
 const EMAIL_REGEX =
   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/;
@@ -44,28 +43,17 @@ function Contact() {
   const [submitting, setSubmitting] = useState(false);
 
   const [errors, setErrors] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    service: "",
-    message: "",
+    name: "", email: "", phone: "", service: "", message: "",
   });
 
   const [formData, setFormData] = useState({
-    name: "",
-    company: "",
-    email: "",
-    phone: "",
-    service: "",
-    message: "",
+    name: "", company: "", email: "", phone: "", service: "", message: "",
   });
 
   // 🔥 फोन नंबर फक्त १० आकडे घेईल (कोणताही +91 नाही) 🔥
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // फक्त आकडे स्वीकारा आणि १० पेक्षा जास्त कापून टाका
     const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
     setFormData({ ...formData, phone: digits });
-    
     if (errors.phone) setErrors({ ...errors, phone: "" });
   };
 
@@ -108,23 +96,19 @@ function Contact() {
       service: validateService(formData.service),
       message: validateMessage(formData.message),
     };
-
     setErrors(newErrors);
     return !Object.values(newErrors).some((error) => error !== "");
   };
 
   /* ========================================================
-     FORM SUBMIT (WhatsApp वर पाठवण्यासाठी)
+     FORM SUBMIT (बॅकएंडला डेटा पाठवणे)
   ======================================================== */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (submitting) return;
-
-    // Reset errors
     setErrors({ name: "", email: "", phone: "", service: "", message: "" });
 
-    // Validate form
     if (!validateForm()) {
       const firstErrorField = document.querySelector('[data-error="true"]') as HTMLElement;
       if (firstErrorField) {
@@ -136,35 +120,38 @@ function Contact() {
 
     setSubmitting(true);
 
-    // तुझा WhatsApp नंबर
-    const YOUR_WHATSAPP_NUMBER = "919417828498"; 
+    try {
+      // 🔥 तुझ्या index.js ला डेटा पाठवत आहोत 🔥
+      const response = await fetch(`${API_URL}/contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: formData.name,
+          company: formData.company,
+          email: formData.email,
+          phone: `+91 ${formData.phone}`, // बॅकएंडला +91 सह पाठवत आहोत
+          service: formData.service,
+          message: formData.message,
+        }),
+      });
 
-    // फोनमधून फक्त आकडे
-    const cleanPhone = formData.phone.replace(/\D/g, "");
+      const data = await response.json();
 
-    // मेसेज तयार करणे
-    const text = `*New Enquiry from PFMC Website*%0A%0A*Name:* ${formData.name}%0A*Company:* ${formData.company || "N/A"}%0A*Email:* ${formData.email}%0A*Phone:* ${cleanPhone}%0A*Service:* ${formData.service}%0A*Message:* ${formData.message}`;
-
-    // WhatsApp ची अधिकृत लिंक
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=${YOUR_WHATSAPP_NUMBER}&text=${text}`;
-
-    // 🔥 ब्राउझर ब्लॉक करू नये म्हणून हिडन लिंकचा वापर 🔥
-    const link = document.createElement("a");
-    link.href = whatsappUrl;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    toast.success("Opening WhatsApp... Please click 'Send' in the app.");
-
-    setTimeout(() => {
+      if (response.ok && data.success) {
+        setSent(true);
+        toast.success("Enquiry sent successfully! Check your email.");
+        setFormData({ name: "", company: "", email: "", phone: "", service: "", message: "" });
+      } else {
+        toast.error(data.message || "Failed to send enquiry.");
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error("Network error. Is your backend running?");
+    } finally {
       setSubmitting(false);
-      setSent(true);
-      // फॉर्म रिकामा करणे
-      setFormData({ name: "", company: "", email: "", phone: "", service: "", message: "" });
-    }, 3000);
+    }
   };
 
   const openWhatsApp = () => {
@@ -193,7 +180,6 @@ function Contact() {
             </p>
 
             <div className="mt-8 space-y-4">
-              {/* CALL */}
               <a href={`tel:${CONTACT_CONFIG.phone.replace(/\s/g, "")}`} className="group flex items-center gap-4 rounded-xl border bg-card p-4 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 transition-transform duration-300 group-hover:scale-110">
                   <Phone className="h-5 w-5 text-primary" />
@@ -205,7 +191,6 @@ function Contact() {
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary" />
               </a>
 
-              {/* EMAIL */}
               <a href={`mailto:${CONTACT_CONFIG.email}`} className="group flex items-center gap-4 rounded-xl border bg-card p-4 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 transition-transform duration-300 group-hover:scale-110">
                   <Mail className="h-5 w-5 text-primary" />
@@ -217,7 +202,6 @@ function Contact() {
                 <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary" />
               </a>
 
-              {/* WHATSAPP */}
               <button type="button" onClick={openWhatsApp} className="group flex w-full items-center gap-4 rounded-xl border bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 transition-transform duration-300 group-hover:scale-110">
                   <MessageCircle className="h-5 w-5 text-primary" />
@@ -230,7 +214,6 @@ function Contact() {
               </button>
             </div>
 
-            {/* OFFICE INFORMATION */}
             <div className="mt-6 rounded-xl border bg-surface p-5">
               <div className="flex gap-3">
                 <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
@@ -258,11 +241,10 @@ function Contact() {
                   Tell Us What Your <span className="text-primary">Space Needs</span>
                 </h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Fill in the details below and our team will get back to you shortly on WhatsApp.
+                  Fill in the details below and our team will get back to you shortly.
                 </p>
               </div>
 
-              {/* NAME + COMPANY */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
                   label="Full Name"
@@ -286,7 +268,6 @@ function Contact() {
                 />
               </div>
 
-              {/* EMAIL + PHONE */}
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <Field
                   label="Business Email"
@@ -318,7 +299,6 @@ function Contact() {
                 </div>
               </div>
 
-              {/* SERVICE */}
               <div className="mt-5">
                 <label className="block text-xs font-semibold">
                   What service do you need? <span className="text-red-500">*</span>
@@ -341,7 +321,6 @@ function Contact() {
                 {errors.service && <p className="mt-1 text-xs text-red-500">{errors.service}</p>}
               </div>
 
-              {/* MESSAGE */}
               <div className="mt-5">
                 <label className="block text-xs font-semibold">
                   Message <span className="text-red-500">*</span>
@@ -361,7 +340,6 @@ function Contact() {
                 {errors.message && <p className="mt-1 text-xs text-red-500">{errors.message}</p>}
               </div>
 
-              {/* SUBMIT */}
               <button
                 type="submit"
                 disabled={sent || submitting}
@@ -377,14 +355,13 @@ function Contact() {
               </button>
               
               <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-                By submitting this form, you agree to be contacted by our team regarding your enquiry via WhatsApp.
+                By submitting this form, you agree to be contacted by our team regarding your enquiry.
               </p>
             </form>
           </Reveal>
         </div>
       </section>
 
-      {/* QUICK CTA */}
       <section className="border-t bg-surface py-14">
         <div className="mx-auto max-w-5xl px-4 text-center sm:px-6">
           <Reveal>
@@ -413,9 +390,6 @@ function Contact() {
   );
 }
 
-/* ==========================================================
-   REUSABLE INPUT FIELD
-========================================================== */
 function Field({
   label, name, type = "text", placeholder, required = true, value, onChange, onBlur, error = "",
 }: {

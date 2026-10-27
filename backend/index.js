@@ -1,5 +1,5 @@
 // =====================================================
-// SMART PROPERTY AND FACILITY SERVICES PRIVATE LIMITED
+// PFMC - PROP FACILITY MANAGEMENT COMPANY
 // BACKEND - index.js
 // Contact Enquiry + Careers Application + Gmail
 // =====================================================
@@ -11,11 +11,19 @@ const nodemailer = require("nodemailer");
 
 dotenv.config();
 
+// Load templates AFTER dotenv so SITE_URL / COMPANY_PHONE are available
+const {
+  contactClientEmail,
+  contactHrEmail,
+  careerApplicantEmail,
+  careerHrEmail,
+} = require("./emailTemplates");
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const COMPANY_NAME =
-  "SMART PROPERTY AND FACILITY SERVICES PRIVATE LIMITED";
+const BRAND = "PFMC";
+const FROM = `"PFMC - Prop Facility Management" <${process.env.EMAIL_USER}>`;
 
 // =====================================================
 // MIDDLEWARE
@@ -49,23 +57,17 @@ const transporter = nodemailer.createTransport({
 
 console.log(
   "📧 EMAIL_USER:",
-  process.env.EMAIL_USER
-    ? "✅ LOADED (" + process.env.EMAIL_USER + ")"
-    : "❌ MISSING"
+  process.env.EMAIL_USER ? "✅ LOADED (" + process.env.EMAIL_USER + ")" : "❌ MISSING"
 );
-
 console.log(
   "🔑 EMAIL_PASS:",
   process.env.EMAIL_PASS
     ? "✅ LOADED (length: " + process.env.EMAIL_PASS.length + ")"
     : "❌ MISSING"
 );
-
 console.log(
   "📧 HR_EMAIL:",
-  process.env.HR_EMAIL
-    ? "✅ LOADED (" + process.env.HR_EMAIL + ")"
-    : "❌ MISSING"
+  process.env.HR_EMAIL ? "✅ LOADED (" + process.env.HR_EMAIL + ")" : "❌ MISSING"
 );
 
 // =====================================================
@@ -75,8 +77,7 @@ console.log(
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message:
-      "SMART PROPERTY AND FACILITY SERVICES PRIVATE LIMITED backend is running 🚀",
+    message: "PFMC backend is running 🚀",
   });
 });
 
@@ -87,26 +88,15 @@ app.get("/", (req, res) => {
 app.get("/api/test-email", async (req, res) => {
   try {
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: FROM,
       to: process.env.HR_EMAIL,
-
-      subject: `${COMPANY_NAME} Website - Test Email`,
-
-      text: `
-Congratulations!
-
-Gmail integration with the ${COMPANY_NAME} backend is working successfully.
-
-This is a test email from the ${COMPANY_NAME} website.
-      `.trim(),
+      subject: `${BRAND} Website - Test Email`,
+      text: `Gmail integration with the ${BRAND} backend is working successfully.`,
     });
 
     console.log("✅ Test email sent successfully");
 
-    res.json({
-      success: true,
-      message: "Test email sent successfully",
-    });
+    res.json({ success: true, message: "Test email sent successfully" });
   } catch (error) {
     console.error("❌ Test email error:", error);
 
@@ -124,31 +114,10 @@ This is a test email from the ${COMPANY_NAME} website.
 
 app.post("/api/contact", async (req, res) => {
   try {
-    const {
-      fullName,
-      company,
-      email,
-      phone,
-      service,
-      message,
-    } = req.body;
+    const { fullName, company, email, phone, service, message } = req.body;
 
-    console.log("");
-    console.log("📩 ================================");
-    console.log("📩 NEW CONTACT ENQUIRY");
-    console.log("📩 ================================");
-
-    console.log({
-      fullName,
-      company,
-      email,
-      phone,
-      service,
-    });
-
-    // -------------------------------------------------
-    // VALIDATION
-    // -------------------------------------------------
+    console.log("\n📩 NEW CONTACT ENQUIRY");
+    console.log({ fullName, company, email, phone, service });
 
     if (!fullName || !email || !phone || !service || !message) {
       return res.status(400).json({
@@ -157,232 +126,58 @@ app.post("/api/contact", async (req, res) => {
       });
     }
 
-    // -------------------------------------------------
-    // EMAIL TO HR
-    // -------------------------------------------------
-
+    // ---------- Email to HR ----------
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: FROM,
       to: process.env.HR_EMAIL,
-
       replyTo: email,
-
-      subject: `New ${COMPANY_NAME} Website Enquiry - ${service}`,
-
+      subject: `New ${BRAND} Website Enquiry - ${service}`,
       text: `
-NEW ${COMPANY_NAME.toUpperCase()} WEBSITE ENQUIRY
+NEW ${BRAND} WEBSITE ENQUIRY
 ========================
-
-Full Name:
-${fullName}
-
-Company:
-${company || "Not provided"}
-
-Business Email:
-${email}
-
-Phone Number:
-${phone}
-
-Service Required:
-${service}
+Full Name: ${fullName}
+Company: ${company || "Not provided"}
+Email: ${email}
+Phone: ${phone}
+Service: ${service}
 
 Message:
 ${message}
-
-========================
-
-This enquiry was submitted through the ${COMPANY_NAME} website.
       `.trim(),
-
-      html: `
-        <div style="
-          font-family: Arial, sans-serif;
-          line-height: 1.6;
-          color: #222;
-          max-width: 750px;
-          margin: auto;
-        ">
-
-          <h2 style="color: #111;">
-            New ${COMPANY_NAME} Website Enquiry
-          </h2>
-
-          <p>
-            A new enquiry has been submitted through the ${COMPANY_NAME} website.
-          </p>
-
-          <hr />
-
-          <table
-            cellpadding="8"
-            cellspacing="0"
-            style="
-              border-collapse: collapse;
-              width: 100%;
-            "
-          >
-
-            <tr>
-              <td style="font-weight: bold; width: 180px;">
-                Full Name
-              </td>
-              <td>
-                ${fullName}
-              </td>
-            </tr>
-
-            <tr>
-              <td style="font-weight: bold;">
-                Company
-              </td>
-              <td>
-                ${company || "Not provided"}
-              </td>
-            </tr>
-
-            <tr>
-              <td style="font-weight: bold;">
-                Business Email
-              </td>
-              <td>
-                ${email}
-              </td>
-            </tr>
-
-            <tr>
-              <td style="font-weight: bold;">
-                Phone Number
-              </td>
-              <td>
-                ${phone}
-              </td>
-            </tr>
-
-            <tr>
-              <td style="font-weight: bold;">
-                Service Required
-              </td>
-              <td>
-                ${service}
-              </td>
-            </tr>
-
-          </table>
-
-          <h3>
-            Message
-          </h3>
-
-          <div style="
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 8px;
-            white-space: pre-wrap;
-          ">
-            ${message}
-          </div>
-
-          <hr />
-
-          <p style="
-            font-size: 12px;
-            color: #777;
-          ">
-            This enquiry was submitted through the ${COMPANY_NAME} website.
-          </p>
-
-        </div>
-      `,
+      html: contactHrEmail({ fullName, company, email, phone, service, message }),
     });
 
     console.log("✅ Contact enquiry sent to HR");
 
-    // -------------------------------------------------
-    // CONFIRMATION EMAIL TO CUSTOMER
-    // -------------------------------------------------
-
+    // ---------- Confirmation to client ----------
     try {
       await transporter.sendMail({
-        from: process.env.EMAIL_USER,
+        from: FROM,
         to: email,
-
-        subject: `Thank You for Contacting ${COMPANY_NAME}`,
-
+        subject: `Thank you for contacting ${BRAND}`,
         text: `
 Dear ${fullName},
 
-Thank you for contacting ${COMPANY_NAME}.
-
-We have successfully received your enquiry regarding:
-
-${service}
+Thank you for contacting ${BRAND}.
+We have received your enquiry regarding: ${service}
 
 Our team will review your requirements and get back to you shortly.
 
 Regards,
-${COMPANY_NAME} Team
+Team ${BRAND}
         `.trim(),
-
-        html: `
-          <div style="
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #222;
-          ">
-
-            <h2>
-              Thank You for Contacting ${COMPANY_NAME}
-            </h2>
-
-            <p>
-              Dear ${fullName},
-            </p>
-
-            <p>
-              Thank you for contacting ${COMPANY_NAME}.
-              We have successfully received your enquiry.
-            </p>
-
-            <p>
-              <strong>Service:</strong>
-              ${service}
-            </p>
-
-            <p>
-              Our team will review your requirements
-              and get back to you shortly.
-            </p>
-
-            <br />
-
-            <p>
-              Regards,<br />
-              <strong>${COMPANY_NAME} Team</strong>
-            </p>
-
-          </div>
-        `,
+        html: contactClientEmail({ fullName, service }),
       });
 
       console.log("✅ Customer confirmation email sent");
     } catch (confirmationError) {
-      console.error(
-        "⚠️ Customer confirmation email failed:",
-        confirmationError.message
-      );
+      console.error("⚠️ Customer confirmation email failed:", confirmationError.message);
     }
-
-    // -------------------------------------------------
-    // SUCCESS
-    // -------------------------------------------------
 
     res.json({
       success: true,
       message: "Your enquiry has been sent successfully.",
     });
-
   } catch (error) {
     console.error("❌ Contact API error:", error);
 
@@ -400,31 +195,10 @@ ${COMPANY_NAME} Team
 
 app.post("/api/careers/apply", async (req, res) => {
   try {
-    const {
-      fullName,
-      email,
-      phone,
-      position,
-      experience,
-      message,
-    } = req.body;
+    const { fullName, email, phone, position, experience, message } = req.body;
 
-    console.log("");
-    console.log("💼 ================================");
-    console.log("💼 NEW CAREER APPLICATION");
-    console.log("💼 ================================");
-
-    console.log({
-      fullName,
-      email,
-      phone,
-      position,
-      experience,
-    });
-
-    // -------------------------------------------------
-    // VALIDATION
-    // -------------------------------------------------
+    console.log("\n💼 NEW CAREER APPLICATION");
+    console.log({ fullName, email, phone, position, experience });
 
     if (!fullName || !email || !phone || !position) {
       return res.status(400).json({
@@ -433,248 +207,59 @@ app.post("/api/careers/apply", async (req, res) => {
       });
     }
 
-    // -------------------------------------------------
-    // EMAIL APPLICATION TO HR
-    // -------------------------------------------------
-
+    // ---------- Email to HR ----------
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: FROM,
       to: process.env.HR_EMAIL,
-
       replyTo: email,
-
-      subject: `New ${COMPANY_NAME} Job Application - ${position}`,
-
+      subject: `New ${BRAND} Job Application - ${position}`,
       text: `
-NEW ${COMPANY_NAME.toUpperCase()} JOB APPLICATION
+NEW ${BRAND} JOB APPLICATION
 ========================
-
-Position Applied For:
-${position}
-
-Full Name:
-${fullName}
-
-Email:
-${email}
-
-Phone:
-${phone}
-
-Experience:
-${experience || "Not provided"}
+Position: ${position}
+Full Name: ${fullName}
+Email: ${email}
+Phone: ${phone}
+Experience: ${experience || "Not provided"}
 
 Message:
 ${message || "Not provided"}
-
-========================
-
-This application was submitted through the ${COMPANY_NAME} Careers page.
       `.trim(),
-
-      html: `
-        <div style="
-          font-family: Arial, sans-serif;
-          line-height: 1.6;
-          color: #222;
-          max-width: 750px;
-          margin: auto;
-        ">
-
-          <h2 style="color: #111;">
-            New ${COMPANY_NAME} Job Application
-          </h2>
-
-          <p>
-            A new job application has been submitted
-            through the ${COMPANY_NAME} Careers page.
-          </p>
-
-          <hr />
-
-          <table
-            cellpadding="8"
-            cellspacing="0"
-            style="
-              border-collapse: collapse;
-              width: 100%;
-            "
-          >
-
-            <tr>
-              <td style="
-                font-weight: bold;
-                width: 180px;
-              ">
-                Position
-              </td>
-
-              <td>
-                ${position}
-              </td>
-            </tr>
-
-            <tr>
-              <td style="font-weight: bold;">
-                Full Name
-              </td>
-
-              <td>
-                ${fullName}
-              </td>
-            </tr>
-
-            <tr>
-              <td style="font-weight: bold;">
-                Email
-              </td>
-
-              <td>
-                ${email}
-              </td>
-            </tr>
-
-            <tr>
-              <td style="font-weight: bold;">
-                Phone
-              </td>
-
-              <td>
-                ${phone}
-              </td>
-            </tr>
-
-            <tr>
-              <td style="font-weight: bold;">
-                Experience
-              </td>
-
-              <td>
-                ${experience || "Not provided"}
-              </td>
-            </tr>
-
-          </table>
-
-          <h3>
-            Why do you want to join ${COMPANY_NAME}?
-          </h3>
-
-          <div style="
-            background: #f5f5f5;
-            padding: 15px;
-            border-radius: 8px;
-            white-space: pre-wrap;
-          ">
-            ${message || "Not provided"}
-          </div>
-
-          <hr />
-
-          <p style="
-            font-size: 12px;
-            color: #777;
-          ">
-            This application was submitted through the ${COMPANY_NAME} Careers page.
-          </p>
-
-        </div>
-      `,
+      html: careerHrEmail({ fullName, email, phone, position, experience, message }),
     });
 
     console.log("✅ Career application sent to HR");
 
-    // -------------------------------------------------
-    // CONFIRMATION EMAIL TO APPLICANT
-    // -------------------------------------------------
-
+    // ---------- Confirmation to applicant ----------
     try {
       await transporter.sendMail({
-        from: process.env.EMAIL_USER,
+        from: FROM,
         to: email,
-
-        subject: `${COMPANY_NAME} - Application Received`,
-
+        subject: `${BRAND} - Application Received`,
         text: `
 Dear ${fullName},
 
-Thank you for applying to ${COMPANY_NAME}.
+Thank you for applying to ${BRAND}.
+We have received your application for: ${position}
 
-We have successfully received your application for:
-
-${position}
-
-Our HR team will review your application and contact you if your profile matches our requirements.
+Our HR team will review your profile and contact you if it matches our requirements.
 
 Regards,
-${COMPANY_NAME} HR Team
+${BRAND} HR Team
         `.trim(),
-
-        html: `
-          <div style="
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #222;
-          ">
-
-            <h2>
-              Application Received - ${COMPANY_NAME}
-            </h2>
-
-            <p>
-              Dear ${fullName},
-            </p>
-
-            <p>
-              Thank you for applying to ${COMPANY_NAME}.
-              We have successfully received your application.
-            </p>
-
-            <p>
-              <strong>
-                Position Applied For:
-              </strong>
-
-              ${position}
-            </p>
-
-            <p>
-              Our HR team will review your application
-              and contact you if your profile matches
-              our requirements.
-            </p>
-
-            <br />
-
-            <p>
-              Regards,<br />
-              <strong>${COMPANY_NAME} HR Team</strong>
-            </p>
-
-          </div>
-        `,
+        html: careerApplicantEmail({ fullName, position }),
       });
 
       console.log("✅ Applicant confirmation email sent");
-
     } catch (confirmationError) {
-      console.error(
-        "⚠️ Applicant confirmation email failed:",
-        confirmationError.message
-      );
+      console.error("⚠️ Applicant confirmation email failed:", confirmationError.message);
     }
-
-    // -------------------------------------------------
-    // SUCCESS RESPONSE
-    // -------------------------------------------------
 
     res.json({
       success: true,
       message: "Application submitted successfully.",
     });
-
   } catch (error) {
-
     console.error("❌ Careers API error:", error);
 
     res.status(500).json({
@@ -701,28 +286,12 @@ app.use((req, res) => {
 // =====================================================
 
 app.listen(PORT, "0.0.0.0", () => {
-
-  console.log("");
+  console.log("\n======================================");
+  console.log("🚀 PFMC BACKEND STARTED");
   console.log("======================================");
-  console.log(
-    "🚀 SMART PROPERTY AND FACILITY SERVICES PRIVATE LIMITED BACKEND STARTED"
-  );
-  console.log("======================================");
-
   console.log(`🌐 Server: http://localhost:${PORT}`);
-
-  console.log(
-    `📧 Contact API: http://localhost:${PORT}/api/contact`
-  );
-
-  console.log(
-    `💼 Careers API: http://localhost:${PORT}/api/careers/apply`
-  );
-
-  console.log(
-    `🧪 Test Email: http://localhost:${PORT}/api/test-email`
-  );
-
-  console.log("======================================");
-  console.log("");
+  console.log(`📧 Contact API: http://localhost:${PORT}/api/contact`);
+  console.log(`💼 Careers API: http://localhost:${PORT}/api/careers/apply`);
+  console.log(`🧪 Test Email: http://localhost:${PORT}/api/test-email`);
+  console.log("======================================\n");
 });
