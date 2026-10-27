@@ -10,6 +10,13 @@ import {
   MessageCircle,
   CheckCircle2,
   ExternalLink,
+  User,
+  Building2,
+  Briefcase,
+  MessageSquare,
+  Shield,
+  Loader2,
+  type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -110,11 +117,13 @@ function Contact() {
     setErrors({ name: "", email: "", phone: "", service: "", message: "" });
 
     if (!validateForm()) {
-      const firstErrorField = document.querySelector('[data-error="true"]') as HTMLElement;
-      if (firstErrorField) {
-        firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
-        firstErrorField.focus();
-      }
+      setTimeout(() => {
+        const firstErrorField = document.querySelector('[data-error="true"]') as HTMLElement | null;
+        if (firstErrorField) {
+          firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
+          firstErrorField.focus();
+        }
+      }, 50);
       return;
     }
 
@@ -234,130 +243,199 @@ function Contact() {
 
           {/* RIGHT SIDE — CONTACT FORM */}
           <Reveal delay={100}>
-            <form id="contact-form" onSubmit={handleSubmit} className="rounded-2xl border bg-card p-6 shadow-card sm:p-8">
-              <div className="mb-7">
-                <p className="eyebrow">Start a Conversation</p>
-                <h2 className="mt-2 text-2xl font-extrabold sm:text-3xl">
-                  Tell Us What Your <span className="text-primary">Space Needs</span>
+            <div className="overflow-hidden rounded-3xl border bg-card shadow-card">
+              {/* FORM HEADER */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-primary to-primary/80 px-6 py-7 text-primary-foreground sm:px-8">
+                <div className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full bg-white/10" />
+                <div className="pointer-events-none absolute -bottom-14 right-20 h-32 w-32 rounded-full bg-white/10" />
+
+                <span className="relative inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
+                  <MessageCircle className="h-3 w-3" />
+                  Start a Conversation
+                </span>
+                <h2 className="relative mt-3 text-2xl font-extrabold leading-tight sm:text-3xl">
+                  Tell Us What Your Space Needs
                 </h2>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                <p className="relative mt-2 text-sm leading-relaxed text-white/85">
                   Fill in the details below and our team will get back to you shortly.
                 </p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  label="Full Name"
-                  name="name"
-                  placeholder="Your name"
-                  value={formData.name}
-                  onChange={(val) => {
-                    setFormData({ ...formData, name: val });
-                    if (errors.name) setErrors({ ...errors, name: "" });
-                  }}
-                  onBlur={() => setErrors({ ...errors, name: validateName(formData.name) })}
-                  error={errors.name}
-                />
-                <Field
-                  label="Company"
-                  name="company"
-                  placeholder="Company name"
-                  required={false}
-                  value={formData.company}
-                  onChange={(val) => setFormData({ ...formData, company: val })}
-                />
-              </div>
-
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <Field
-                  label="Business Email"
-                  name="email"
-                  type="email"
-                  placeholder="you@company.com"
-                  value={formData.email}
-                  onChange={(val) => {
-                    setFormData({ ...formData, email: val });
-                    if (errors.email) setErrors({ ...errors, email: "" });
-                  }}
-                  onBlur={() => setErrors({ ...errors, email: validateEmail(formData.email) })}
-                  error={errors.email}
-                />
-                <div>
-                  <label className="block text-xs font-semibold">
-                    Phone Number <span className="text-red-500">*</span>
-                    <input
-                      type="tel"
-                      name="phone"
-                      placeholder="9876543210"
-                      value={formData.phone}
-                      onChange={handlePhoneChange}
-                      autoComplete="off"
-                      className={`mt-1.5 w-full rounded-lg border bg-background px-3 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.phone ? "border-red-500 ring-red-500" : ""}`}
-                    />
-                  </label>
-                  {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
-                </div>
-              </div>
-
-              <div className="mt-5">
-                <label className="block text-xs font-semibold">
-                  What service do you need? <span className="text-red-500">*</span>
-                  <select
-                    name="service"
-                    value={formData.service}
-                    onChange={(e) => {
-                      setFormData({ ...formData, service: e.target.value });
-                      if (errors.service) setErrors({ ...errors, service: "" });
-                    }}
-                    className={`mt-1.5 w-full rounded-lg border bg-background px-3 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.service ? "border-red-500 ring-red-500" : ""}`}
+              {sent ? (
+                <div className="flex flex-col items-center px-6 py-14 text-center sm:px-8">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                    <CheckCircle2 className="h-12 w-12 text-primary" />
+                  </div>
+                  <h3 className="mt-5 text-2xl font-extrabold">Enquiry Sent!</h3>
+                  <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                    Thank you for contacting PFMC. A confirmation email is on its way, and our team will respond within one business day.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSent(false)}
+                    className="mt-6 rounded-full border-2 border-primary px-6 py-2.5 text-sm font-bold text-primary transition-all duration-300 hover:bg-primary hover:text-primary-foreground"
                   >
-                    <option value="">Select a service</option>
-                    {services.map((s) => (
-                      <option key={s.slug} value={s.title}>{s.title}</option>
-                    ))}
-                    <option value="Other">Other</option>
-                  </select>
-                </label>
-                {errors.service && <p className="mt-1 text-xs text-red-500">{errors.service}</p>}
-              </div>
+                    Send another enquiry
+                  </button>
+                </div>
+              ) : (
+                <form
+                  id="contact-form"
+                  onSubmit={handleSubmit}
+                  noValidate
+                  className="p-6 sm:p-8"
+                >
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <Field
+                      label="Full Name"
+                      name="name"
+                      icon={User}
+                      placeholder="Your name"
+                      value={formData.name}
+                      onChange={(val) => {
+                        setFormData({ ...formData, name: val });
+                        if (errors.name) setErrors({ ...errors, name: "" });
+                      }}
+                      onBlur={() => setErrors({ ...errors, name: validateName(formData.name) })}
+                      error={errors.name}
+                    />
+                    <Field
+                      label="Company"
+                      name="company"
+                      icon={Building2}
+                      placeholder="Company name"
+                      required={false}
+                      value={formData.company}
+                      onChange={(val) => setFormData({ ...formData, company: val })}
+                    />
+                  </div>
 
-              <div className="mt-5">
-                <label className="block text-xs font-semibold">
-                  Message <span className="text-red-500">*</span>
-                  <textarea
-                    name="message"
-                    rows={4}
-                    placeholder="Tell us about your property and requirements..."
-                    value={formData.message}
-                    onChange={(e) => {
-                      setFormData({ ...formData, message: e.target.value });
-                      if (errors.message) setErrors({ ...errors, message: "" });
-                    }}
-                    onBlur={() => setErrors({ ...errors, message: validateMessage(formData.message) })}
-                    className={`mt-1.5 w-full resize-y rounded-lg border bg-background px-3 py-3 text-sm leading-relaxed outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.message ? "border-red-500 ring-red-500" : ""}`}
-                  />
-                </label>
-                {errors.message && <p className="mt-1 text-xs text-red-500">{errors.message}</p>}
-              </div>
+                  <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                    <Field
+                      label="Business Email"
+                      name="email"
+                      type="email"
+                      icon={Mail}
+                      placeholder="you@company.com"
+                      value={formData.email}
+                      onChange={(val) => {
+                        setFormData({ ...formData, email: val });
+                        if (errors.email) setErrors({ ...errors, email: "" });
+                      }}
+                      onBlur={() => setErrors({ ...errors, email: validateEmail(formData.email) })}
+                      error={errors.email}
+                    />
 
-              <button
-                type="submit"
-                disabled={sent || submitting}
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground transition-all duration-300 hover:scale-[1.02] hover:shadow-lg disabled:cursor-default disabled:opacity-90 sm:w-auto"
-              >
-                {sent ? (
-                  <><CheckCircle2 className="h-4 w-4" /> Enquiry Sent!</>
-                ) : submitting ? (
-                  <><Send className="h-4 w-4 animate-pulse" /> Sending...</>
-                ) : (
-                  <>Send Enquiry <Send className="h-4 w-4" /></>
-                )}
-              </button>
-              
-              <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-                By submitting this form, you agree to be contacted by our team regarding your enquiry.
-              </p>
-            </form>
+                    {/* PHONE */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wide text-foreground/80">
+                        Phone Number <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative mt-1.5">
+                        <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                        <span className="pointer-events-none absolute left-10 top-1/2 -translate-y-1/2 border-r pr-2 text-sm font-semibold text-muted-foreground">
+                          +91
+                        </span>
+                        <input
+                          type="tel"
+                          name="phone"
+                          inputMode="numeric"
+                          placeholder="9876543210"
+                          value={formData.phone}
+                          onChange={handlePhoneChange}
+                          onBlur={() => setErrors({ ...errors, phone: validatePhone(formData.phone) })}
+                          autoComplete="off"
+                          className={`${fieldBase} pl-[5.5rem] ${errors.phone ? fieldError : ""}`}
+                          data-error={!!errors.phone}
+                        />
+                      </div>
+                      {errors.phone && (
+                        <p className="mt-1.5 text-xs font-medium text-red-500">{errors.phone}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* SERVICE */}
+                  <div className="mt-5">
+                    <label className="block text-xs font-bold uppercase tracking-wide text-foreground/80">
+                      What service do you need? <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative mt-1.5">
+                      <Briefcase className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                      <select
+                        name="service"
+                        value={formData.service}
+                        onChange={(e) => {
+                          setFormData({ ...formData, service: e.target.value });
+                          if (errors.service) setErrors({ ...errors, service: "" });
+                        }}
+                        onBlur={() => setErrors({ ...errors, service: validateService(formData.service) })}
+                        className={`${fieldBase} ${errors.service ? fieldError : ""}`}
+                        data-error={!!errors.service}
+                      >
+                        <option value="">Select a service</option>
+                        {services.map((s) => (
+                          <option key={s.slug} value={s.title}>{s.title}</option>
+                        ))}
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    {errors.service && (
+                      <p className="mt-1.5 text-xs font-medium text-red-500">{errors.service}</p>
+                    )}
+                  </div>
+
+                  {/* MESSAGE */}
+                  <div className="mt-5">
+                    <div className="flex items-end justify-between">
+                      <label className="block text-xs font-bold uppercase tracking-wide text-foreground/80">
+                        Message <span className="text-red-500">*</span>
+                      </label>
+                      <span className="text-[11px] text-muted-foreground">
+                        {formData.message.length}/1000
+                      </span>
+                    </div>
+                    <div className="relative mt-1.5">
+                      <MessageSquare className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-primary" />
+                      <textarea
+                        name="message"
+                        rows={4}
+                        maxLength={1000}
+                        placeholder="Tell us about your property and requirements..."
+                        value={formData.message}
+                        onChange={(e) => {
+                          setFormData({ ...formData, message: e.target.value });
+                          if (errors.message) setErrors({ ...errors, message: "" });
+                        }}
+                        onBlur={() => setErrors({ ...errors, message: validateMessage(formData.message) })}
+                        className={`${fieldBase} resize-none leading-relaxed ${errors.message ? fieldError : ""}`}
+                        data-error={!!errors.message}
+                      />
+                    </div>
+                    {errors.message && (
+                      <p className="mt-1.5 text-xs font-medium text-red-500">{errors.message}</p>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-7 py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-primary/40 disabled:cursor-default disabled:opacity-80 disabled:hover:scale-100"
+                  >
+                    {submitting ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</>
+                    ) : (
+                      <>Send Enquiry <Send className="h-4 w-4" /></>
+                    )}
+                  </button>
+
+                  <p className="mt-4 flex items-start gap-1.5 text-xs leading-relaxed text-muted-foreground">
+                    <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                    By submitting this form, you agree to be contacted by our team regarding your enquiry.
+                  </p>
+                </form>
+              )}
+            </div>
           </Reveal>
         </div>
       </section>
@@ -390,29 +468,37 @@ function Contact() {
   );
 }
 
+const fieldBase =
+  "w-full rounded-xl border bg-background py-3 pl-10 pr-3 text-sm outline-none transition-all duration-200 placeholder:text-muted-foreground/60 focus:border-primary focus:ring-4 focus:ring-primary/15";
+const fieldError = "border-red-500 focus:border-red-500 focus:ring-red-500/15";
+
 function Field({
-  label, name, type = "text", placeholder, required = true, value, onChange, onBlur, error = "",
+  label, name, type = "text", placeholder, required = true, value, onChange, onBlur, error = "", icon: Icon,
 }: {
-  label: string; name: string; type?: string; placeholder?: string; required?: boolean; value: string; onChange: (value: string) => void; onBlur?: () => void; error?: string;
+  label: string; name: string; type?: string; placeholder?: string; required?: boolean; value: string; onChange: (value: string) => void; onBlur?: () => void; error?: string; icon?: LucideIcon;
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold">
+      <label className="block text-xs font-bold uppercase tracking-wide text-foreground/80">
         {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className="relative mt-1.5">
+        {Icon && (
+          <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+        )}
         <input
           name={name}
           type={type}
-          required={required}
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           autoComplete={name === "phone" ? "off" : "on"}
-          className={`mt-1.5 w-full rounded-lg border bg-background px-3 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/10 ${error ? "border-red-500 ring-red-500" : ""}`}
+          className={`${fieldBase} ${error ? fieldError : ""}`}
           data-error={!!error}
         />
-      </label>
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      </div>
+      {error && <p className="mt-1.5 text-xs font-medium text-red-500">{error}</p>}
     </div>
   );
 }

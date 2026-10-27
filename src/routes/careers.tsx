@@ -8,6 +8,14 @@ import {
   TrendingUp,
   Shield,
   X,
+  User,
+  Mail,
+  Phone,
+  Clock,
+  MessageSquare,
+  Send,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { PageHero, CtaBand } from "@/components/PageHero";
 import { Reveal, SectionHeading } from "@/components/Reveal";
@@ -295,13 +303,15 @@ function ApplyModal({
     // Validate form
     if (!validateForm()) {
       // Scroll to first error
-      const firstErrorField = document.querySelector(
-        '[data-error="true"]'
-      ) as HTMLElement;
-      if (firstErrorField) {
-        firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
-        firstErrorField.focus();
-      }
+      setTimeout(() => {
+        const firstErrorField = document.querySelector(
+          '[data-error="true"]'
+        ) as HTMLElement | null;
+        if (firstErrorField) {
+          firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
+          firstErrorField.focus();
+        }
+      }, 50);
       return;
     }
 
@@ -352,205 +362,307 @@ function ApplyModal({
 
   if (!isOpen) return null;
 
+  const inputBase =
+    "w-full rounded-xl border bg-background py-2.5 pl-10 pr-3 text-sm outline-none transition-all duration-200 placeholder:text-muted-foreground/60 focus:border-primary focus:ring-4 focus:ring-primary/15";
+  const inputError =
+    "border-red-500 focus:border-red-500 focus:ring-red-500/15";
+
+  const experienceChips = ["Fresher", "1-3 years", "3-5 years", "5+ years"];
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-card p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+        className="relative max-h-[92vh] w-full max-w-lg overflow-hidden rounded-3xl bg-card shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
 
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold">Apply for {position}</h3>
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary to-primary/80 px-6 py-6 text-primary-foreground">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute -bottom-12 right-16 h-28 w-28 rounded-full bg-white/10" />
 
           <button
             onClick={onClose}
             type="button"
-            className="rounded-full p-1 hover:bg-muted"
+            aria-label="Close"
+            className="absolute right-4 top-4 rounded-full bg-white/15 p-1.5 text-white transition-colors hover:bg-white/30"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
+
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
+            <Briefcase className="h-3 w-3" />
+            PFMC Careers
+          </span>
+
+          <h3 className="relative mt-3 pr-8 text-2xl font-extrabold leading-tight">
+            Apply for {position}
+          </h3>
+
+          <p className="relative mt-1 text-sm text-white/85">
+            Fill in your details and our HR team will get back to you.
+          </p>
         </div>
 
-        {/* FORM */}
+        {/* BODY */}
 
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          {/* FULL NAME */}
-
-          <div>
-            <label className="text-xs font-semibold">
-              Full Name <span className="text-red-500">*</span>
-            </label>
-
-            <input
-              name="fullName"
-              type="text"
-              placeholder="Your full name"
-              value={formData.fullName}
-              onChange={(e) => {
-                setFormData({ ...formData, fullName: e.target.value });
-                if (errors.fullName) setErrors({ ...errors, fullName: "" });
-              }}
-              onBlur={() => {
-                const error = validateFullName(formData.fullName);
-                setErrors({ ...errors, fullName: error });
-              }}
-              autoComplete="name"
-              className={`mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 ${
-                errors.fullName ? "border-red-500 ring-red-500" : ""
-              }`}
-              data-error={!!errors.fullName}
-            />
-            {errors.fullName && (
-              <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>
-            )}
-          </div>
-
-          {/* EMAIL */}
-
-          <div>
-            <label className="text-xs font-semibold">
-              Email <span className="text-red-500">*</span>
-            </label>
-
-            <input
-              name="email"
-              type="email"
-              placeholder="you@email.com"
-              value={formData.email}
-              onChange={(e) => {
-                setFormData({ ...formData, email: e.target.value });
-                if (errors.email) setErrors({ ...errors, email: "" });
-              }}
-              onBlur={() => {
-                const error = validateEmail(formData.email);
-                setErrors({ ...errors, email: error });
-              }}
-              autoComplete="email"
-              className={`mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 ${
-                errors.email ? "border-red-500 ring-red-500" : ""
-              }`}
-              data-error={!!errors.email}
-            />
-            {errors.email && (
-              <p className="mt-1 text-xs text-red-500">{errors.email}</p>
-            )}
-          </div>
-
-          {/* PHONE */}
-
-          <div>
-            <label className="text-xs font-semibold">
-              Phone Number <span className="text-red-500">*</span>
-            </label>
-
-            <input
-              name="phone"
-              type="tel"
-              placeholder="+91 98765 43210"
-              value={formData.phone}
-              onChange={handlePhoneChange}
-              onBlur={() => {
-                const error = validatePhone(formData.phone);
-                setErrors({ ...errors, phone: error });
-              }}
-              inputMode="tel"
-              autoComplete="tel"
-              className={`mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 ${
-                errors.phone ? "border-red-500 ring-red-500" : ""
-              }`}
-              data-error={!!errors.phone}
-            />
-            {errors.phone ? (
-              <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
-            ) : (
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                Indian mobile number only
+        <div className="max-h-[calc(92vh-170px)] overflow-y-auto px-6 py-6">
+          {success ? (
+            <div className="flex flex-col items-center py-10 text-center">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                <CheckCircle2 className="h-12 w-12 text-primary" />
+              </div>
+              <h4 className="mt-5 text-xl font-extrabold">
+                Application Submitted!
+              </h4>
+              <p className="mt-2 max-w-xs text-sm text-muted-foreground">
+                Thank you for applying for {position}. A confirmation email is
+                on its way, and our HR team will contact you soon.
               </p>
-            )}
-          </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              {/* FULL NAME */}
 
-          {/* EXPERIENCE */}
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wide text-foreground/80">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
 
-          <div>
-            <label className="text-xs font-semibold">
-              Years of Experience <span className="text-red-500">*</span>
-            </label>
+                <div className="relative mt-1.5">
+                  <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                  <input
+                    name="fullName"
+                    type="text"
+                    placeholder="Your full name"
+                    value={formData.fullName}
+                    onChange={(e) => {
+                      setFormData({ ...formData, fullName: e.target.value });
+                      if (errors.fullName) setErrors({ ...errors, fullName: "" });
+                    }}
+                    onBlur={() => {
+                      const error = validateFullName(formData.fullName);
+                      setErrors({ ...errors, fullName: error });
+                    }}
+                    autoComplete="name"
+                    className={`${inputBase} ${errors.fullName ? inputError : ""}`}
+                    data-error={!!errors.fullName}
+                  />
+                </div>
+                {errors.fullName && (
+                  <p className="mt-1.5 text-xs font-medium text-red-500">
+                    {errors.fullName}
+                  </p>
+                )}
+              </div>
 
-            <input
-              name="experience"
-              placeholder="e.g., 5+ years"
-              value={formData.experience}
-              onChange={(e) => {
-                setFormData({ ...formData, experience: e.target.value });
-                if (errors.experience) setErrors({ ...errors, experience: "" });
-              }}
-              onBlur={() => {
-                const error = validateExperience(formData.experience);
-                setErrors({ ...errors, experience: error });
-              }}
-              className={`mt-1 w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 ${
-                errors.experience ? "border-red-500 ring-red-500" : ""
-              }`}
-              data-error={!!errors.experience}
-            />
-            {errors.experience && (
-              <p className="mt-1 text-xs text-red-500">{errors.experience}</p>
-            )}
-          </div>
+              {/* EMAIL + PHONE */}
 
-          {/* MESSAGE */}
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wide text-foreground/80">
+                    Email <span className="text-red-500">*</span>
+                  </label>
 
-          <div>
-            <label className="text-xs font-semibold">
-              Why do you want to join PFMC? <span className="text-red-500">*</span>
-            </label>
+                  <div className="relative mt-1.5">
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                    <input
+                      name="email"
+                      type="email"
+                      placeholder="you@email.com"
+                      value={formData.email}
+                      onChange={(e) => {
+                        setFormData({ ...formData, email: e.target.value });
+                        if (errors.email) setErrors({ ...errors, email: "" });
+                      }}
+                      onBlur={() => {
+                        const error = validateEmail(formData.email);
+                        setErrors({ ...errors, email: error });
+                      }}
+                      autoComplete="email"
+                      className={`${inputBase} ${errors.email ? inputError : ""}`}
+                      data-error={!!errors.email}
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="mt-1.5 text-xs font-medium text-red-500">
+                      {errors.email}
+                    </p>
+                  )}
+                </div>
 
-            <textarea
-              name="message"
-              placeholder="Tell us about yourself and why you're interested..."
-              rows={3}
-              value={formData.message}
-              onChange={(e) => {
-                setFormData({ ...formData, message: e.target.value });
-                if (errors.message) setErrors({ ...errors, message: "" });
-              }}
-              onBlur={() => {
-                const error = validateMessage(formData.message);
-                setErrors({ ...errors, message: error });
-              }}
-              className={`mt-1 w-full resize-y rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 ${
-                errors.message ? "border-red-500 ring-red-500" : ""
-              }`}
-              data-error={!!errors.message}
-            />
-            {errors.message && (
-              <p className="mt-1 text-xs text-red-500">{errors.message}</p>
-            )}
-          </div>
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wide text-foreground/80">
+                    Phone <span className="text-red-500">*</span>
+                  </label>
 
-          {/* BUTTONS */}
+                  <div className="relative mt-1.5">
+                    <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                    <input
+                      name="phone"
+                      type="tel"
+                      placeholder="+91 98765 43210"
+                      value={formData.phone}
+                      onChange={handlePhoneChange}
+                      onBlur={() => {
+                        const error = validatePhone(formData.phone);
+                        setErrors({ ...errors, phone: error });
+                      }}
+                      inputMode="tel"
+                      autoComplete="tel"
+                      className={`${inputBase} ${errors.phone ? inputError : ""}`}
+                      data-error={!!errors.phone}
+                    />
+                  </div>
+                  {errors.phone ? (
+                    <p className="mt-1.5 text-xs font-medium text-red-500">
+                      {errors.phone}
+                    </p>
+                  ) : (
+                    <p className="mt-1.5 text-[11px] text-muted-foreground">
+                      Indian mobile number only
+                    </p>
+                  )}
+                </div>
+              </div>
 
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-full border px-4 py-2 text-sm font-semibold hover:bg-muted"
-            >
-              Cancel
-            </button>
+              {/* EXPERIENCE */}
 
-            <button              type="submit"
-              disabled={loading || success}
-              className="flex-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-all duration-300 hover:scale-[1.02] hover:shadow-lg disabled:opacity-70"
-            >
-              {loading ? "Submitting..." : success ? "✅ Submitted!" : "Submit Application"}
-            </button>
-          </div>
-        </form>
+              <div>
+                <label className="text-xs font-bold uppercase tracking-wide text-foreground/80">
+                  Years of Experience <span className="text-red-500">*</span>
+                </label>
+
+                <div className="relative mt-1.5">
+                  <Clock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                  <input
+                    name="experience"
+                    placeholder="e.g., 5+ years"
+                    value={formData.experience}
+                    onChange={(e) => {
+                      setFormData({ ...formData, experience: e.target.value });
+                      if (errors.experience) setErrors({ ...errors, experience: "" });
+                    }}
+                    onBlur={() => {
+                      const error = validateExperience(formData.experience);
+                      setErrors({ ...errors, experience: error });
+                    }}
+                    className={`${inputBase} ${errors.experience ? inputError : ""}`}
+                    data-error={!!errors.experience}
+                  />
+                </div>
+
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {experienceChips.map((chip) => {
+                    const active = formData.experience === chip;
+                    return (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, experience: chip });
+                          if (errors.experience)
+                            setErrors({ ...errors, experience: "" });
+                        }}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition-all duration-200 ${
+                          active
+                            ? "border-primary bg-primary text-primary-foreground shadow-md shadow-primary/30"
+                            : "border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
+                        }`}
+                      >
+                        {chip}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {errors.experience && (
+                  <p className="mt-1.5 text-xs font-medium text-red-500">
+                    {errors.experience}
+                  </p>
+                )}
+              </div>
+
+              {/* MESSAGE */}
+
+              <div>
+                <div className="flex items-end justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wide text-foreground/80">
+                    Why do you want to join PFMC?{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <span className="text-[11px] text-muted-foreground">
+                    {formData.message.length}/500
+                  </span>
+                </div>
+
+                <div className="relative mt-1.5">
+                  <MessageSquare className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-primary" />
+                  <textarea
+                    name="message"
+                    placeholder="Tell us about yourself and why you're interested..."
+                    rows={4}
+                    maxLength={500}
+                    value={formData.message}
+                    onChange={(e) => {
+                      setFormData({ ...formData, message: e.target.value });
+                      if (errors.message) setErrors({ ...errors, message: "" });
+                    }}
+                    onBlur={() => {
+                      const error = validateMessage(formData.message);
+                      setErrors({ ...errors, message: error });
+                    }}
+                    className={`${inputBase} resize-none ${errors.message ? inputError : ""}`}
+                    data-error={!!errors.message}
+                  />
+                </div>
+                {errors.message && (
+                  <p className="mt-1.5 text-xs font-medium text-red-500">
+                    {errors.message}
+                  </p>
+                )}
+              </div>
+
+              {/* BUTTONS */}
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 rounded-full border-2 px-4 py-3 text-sm font-bold transition-colors hover:bg-muted"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={loading || success}
+                  className="inline-flex flex-[1.6] items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-primary/40 disabled:opacity-70 disabled:hover:scale-100"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      Submit Application
+                      <Send className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+                <Shield className="h-3 w-3 text-primary" />
+                Your details are safe and used only for recruitment.
+              </p>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
