@@ -1,7 +1,8 @@
 // =====================================================
 // PFMC - PROP FACILITY MANAGEMENT COMPANY
 // BACKEND - index.js
-// Contact Enquiry + Careers Application + Gmail
+// Contact Enquiry + Careers Application
+// Mail: Brevo API (if BREVO_API_KEY is set) else Gmail SMTP
 // =====================================================
 
 const express = require("express");
@@ -23,7 +24,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 const BRAND = "PFMC";
-const FROM = `"PFMC - Prop Facility Management" <${process.env.EMAIL_USER}>`;
+const SENDER_NAME = "PFMC - Prop Facility Management";
+const FROM = `"${SENDER_NAME}" <${process.env.EMAIL_USER}>`;
+const USE_BREVO = !!process.env.BREVO_API_KEY;
 
 // =====================================================
 // MIDDLEWARE
@@ -40,7 +43,9 @@ app.use(
 app.use(express.json());
 
 // =====================================================
-// GMAIL TRANSPORTER
+// MAIL SENDER
+// - BREVO_API_KEY set  -> Brevo HTTPS API (works on Render free plan)
+// - otherwise          -> Gmail SMTP (works on your PC)
 // =====================================================
 
 const transporter = nodemailer.createTransport({
@@ -49,22 +54,67 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 20000,
 });
+
+async function sendViaBrevo({ to, replyTo, subject, text, html }) {
+  const payload = {
+    sender: { name: SENDER_NAME, email: process.env.EMAIL_USER },
+    to: [{ email: to }],
+    subject,
+  };
+
+  if (replyTo) payload.replyTo = { email: replyTo };
+  if (html) payload.htmlContent = html;
+  if (text) payload.textContent = text;
+  if (!html && !text) payload.textContent = subject;
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      "api-key": process.env.BREVO_API_KEY,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Brevo API ${response.status}: ${body}`);
+  }
+
+  return response.json();
+}
+
+async function sendMail({ to, replyTo, subject, text, html }) {
+  if (USE_BREVO) {
+    return sendViaBrevo({ to, replyTo, subject, text, html });
+  }
+  return transporter.sendMail({ from: FROM, to, replyTo, subject, text, html });
+}
 
 // =====================================================
 // STARTUP CHECK
 // =====================================================
 
+console.log("📮 Mail mode:", USE_BREVO ? "BREVO API" : "GMAIL SMTP");
 console.log(
   "📧 EMAIL_USER:",
   process.env.EMAIL_USER ? "✅ LOADED (" + process.env.EMAIL_USER + ")" : "❌ MISSING"
 );
-console.log(
-  "🔑 EMAIL_PASS:",
-  process.env.EMAIL_PASS
-    ? "✅ LOADED (length: " + process.env.EMAIL_PASS.length + ")"
-    : "❌ MISSING"
-);
+if (USE_BREVO) {
+  console.log("🔑 BREVO_API_KEY: ✅ LOADED");
+} else {
+  console.log(
+    "🔑 EMAIL_PASS:",
+    process.env.EMAIL_PASS
+      ? "✅ LOADED (length: " + process.env.EMAIL_PASS.length + ")"
+      : "❌ MISSING"
+  );
+}
 console.log(
   "📧 HR_EMAIL:",
   process.env.HR_EMAIL ? "✅ LOADED (" + process.env.HR_EMAIL + ")" : "❌ MISSING"
@@ -87,11 +137,12 @@ app.get("/", (req, res) => {
 
 app.get("/api/test-email", async (req, res) => {
   try {
-    await transporter.sendMail({
-      from: FROM,
+    await sendMail({
       to: process.env.HR_EMAIL,
       subject: `${BRAND} Website - Test Email`,
-      text: `Gmail integration with the ${BRAND} backend is working successfully.`,
+      text: `Email integration with the ${BRAND} backend is working successfully (${
+        USE_BREVO ? "Brevo" : "Gmail"
+      }).`,
     });
 
     console.log("✅ Test email sent successfully");
@@ -127,8 +178,7 @@ app.post("/api/contact", async (req, res) => {
     }
 
     // ---------- Email to HR ----------
-    await transporter.sendMail({
-      from: FROM,
+    await sendMail({
       to: process.env.HR_EMAIL,
       replyTo: email,
       subject: `New ${BRAND} Website Enquiry - ${service}`,
@@ -151,8 +201,7 @@ ${message}
 
     // ---------- Confirmation to client ----------
     try {
-      await transporter.sendMail({
-        from: FROM,
+      await sendMail({
         to: email,
         subject: `Thank you for contacting ${BRAND}`,
         text: `
@@ -208,8 +257,7 @@ app.post("/api/careers/apply", async (req, res) => {
     }
 
     // ---------- Email to HR ----------
-    await transporter.sendMail({
-      from: FROM,
+    await sendMail({
       to: process.env.HR_EMAIL,
       replyTo: email,
       subject: `New ${BRAND} Job Application - ${position}`,
@@ -232,8 +280,7 @@ ${message || "Not provided"}
 
     // ---------- Confirmation to applicant ----------
     try {
-      await transporter.sendMail({
-        from: FROM,
+      await sendMail({
         to: email,
         subject: `${BRAND} - Application Received`,
         text: `
